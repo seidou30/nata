@@ -40,28 +40,36 @@
             }
         }
 
+        /* Login Modal Professionnel */
         .login-overlay {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.8);
-            backdrop-filter: blur(8px);
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(12px);
             display: flex;
             align-items: center;
             justify-content: center;
             z-index: 1000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
 
         .login-card {
             background: white;
-            border-radius: 32px;
-            padding: 32px 24px;
+            border-radius: 40px;
+            padding: 40px 32px;
             width: 90%;
-            max-width: 400px;
+            max-width: 440px;
             text-align: center;
-            animation: slideUp 0.3s ease;
+            animation: slideUp 0.4s ease;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
         }
 
         @keyframes slideUp {
@@ -69,64 +77,116 @@
             to { opacity: 1; transform: translateY(0);}
         }
 
+        .login-header {
+            margin-bottom: 32px;
+        }
+
+        .login-logo {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #1f6e43, #2d8a55);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            font-size: 40px;
+            box-shadow: 0 8px 20px rgba(31, 110, 67, 0.3);
+        }
+
         .login-card h2 {
+            color: #1f6e43;
+            font-size: 1.8rem;
+            margin-bottom: 8px;
+        }
+
+        .login-subtitle {
+            color: #7c8ba0;
+            font-size: 0.9rem;
             margin-bottom: 24px;
+        }
+
+        .password-container {
+            position: relative;
+            width: 100%;
+            margin-bottom: 16px;
+        }
+
+        .password-container input {
+            width: 100%;
+            padding: 14px 18px;
+            padding-right: 50px;
+            border: 2px solid #e2edf2;
+            border-radius: 60px;
+            font-size: 1rem;
+            transition: all 0.2s;
+            background: #f8fafc;
+        }
+
+        .password-container input:focus {
+            outline: none;
+            border-color: #1f6e43;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(31, 110, 67, 0.1);
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            font-size: 1.2rem;
+            user-select: none;
+            color: #7c8ba0;
+            transition: color 0.2s;
+        }
+
+        .toggle-password:hover {
             color: #1f6e43;
         }
 
-        .login-card input {
+        .login-card input[type="email"] {
             width: 100%;
-            padding: 14px 16px;
+            padding: 14px 18px;
             margin-bottom: 16px;
             border: 2px solid #e2edf2;
             border-radius: 60px;
             font-size: 1rem;
-            transition: border-color 0.2s;
+            transition: all 0.2s;
+            background: #f8fafc;
         }
 
-        .login-card input:focus {
+        .login-card input[type="email"]:focus {
             outline: none;
             border-color: #1f6e43;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(31, 110, 67, 0.1);
         }
 
         .login-card button {
             width: 100%;
             padding: 14px;
-            background: #1f6e43;
+            background: linear-gradient(135deg, #1f6e43, #2d8a55);
             color: white;
             border: none;
             border-radius: 60px;
             font-weight: 700;
+            font-size: 1rem;
             cursor: pointer;
-            transition: transform 0.2s, background 0.2s;
+            transition: all 0.2s;
         }
 
         .login-card button:hover {
-            background: #2d8a55;
             transform: translateY(-2px);
-        }
-
-        .login-card .error {
-            color: #bc4742;
-            margin-top: 12px;
-            font-size: 0.85rem;
-        }
-
-        /* Nouveau style pour le bouton visiteur */
-        .visitor-login-btn {
-            background: linear-gradient(135deg, #7c8ba0, #95a5a6);
-            margin-top: 12px;
-        }
-
-        .visitor-login-btn:hover {
-            background: linear-gradient(135deg, #6c7a8f, #8595a6);
+            box-shadow: 0 8px 20px rgba(31, 110, 67, 0.3);
         }
 
         .divider {
             display: flex;
             align-items: center;
             text-align: center;
-            margin: 20px 0;
+            margin: 24px 0;
         }
 
         .divider::before,
@@ -137,9 +197,28 @@
         }
 
         .divider span {
-            padding: 0 10px;
+            padding: 0 12px;
             color: #7c8ba0;
             font-size: 0.85rem;
+        }
+
+        .visitor-login-btn {
+            background: linear-gradient(135deg, #7c8ba0, #95a5a6);
+            margin-top: 0;
+        }
+
+        .visitor-login-btn:hover {
+            background: linear-gradient(135deg, #6c7a8f, #8595a6);
+            box-shadow: 0 8px 20px rgba(124, 139, 160, 0.3);
+        }
+
+        .login-card .error {
+            color: #bc4742;
+            margin-top: 16px;
+            font-size: 0.85rem;
+            padding: 8px;
+            background: #fff0ee;
+            border-radius: 12px;
         }
 
         .admin-badge {
@@ -352,13 +431,17 @@
             color: #7c8ba0;
         }
 
+        .member-actions {
+            display: flex;
+            gap: 8px;
+        }
+
         .delete-btn, .details-btn, .add-btn, .export-btn {
             border: none;
             padding: 8px 16px;
             border-radius: 40px;
             font-weight: 600;
             cursor: pointer;
-            margin-left: 8px;
             transition: all 0.2s;
         }
 
@@ -626,6 +709,44 @@
             padding: 24px;
             max-height: 85vh;
             overflow-y: auto;
+        }
+
+        /* Confirmation Modal Styles */
+        .confirm-modal {
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .confirm-modal h3 {
+            color: #bc4742;
+            margin-bottom: 16px;
+        }
+
+        .confirm-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 24px;
+        }
+
+        .confirm-actions button {
+            flex: 1;
+        }
+
+        .confirm-cancel {
+            background: #7c8ba0;
+        }
+
+        .confirm-cancel:hover {
+            background: #6c7a8f;
+        }
+
+        .confirm-delete {
+            background: #bc4742;
+        }
+
+        .confirm-delete:hover {
+            background: #a03d38;
         }
 
         .sync-status {
@@ -944,7 +1065,7 @@
                     <input type="text" id="searchMemberInput" placeholder="🔍 Rechercher par nom, prénom ou téléphone...">
                 </div>
                 <div class="filter-group">
-                    <button id="sortAZBtn" class="filter-btn">A → Z</button>
+                    <button id="sortAZBtn" class="filter-btn active">A → Z</button>
                     <button id="SortZABtn" class="filter-btn">Z → A</button>
                 </div>
             </div>
@@ -1057,22 +1178,47 @@
 
 <div id="loginModal" class="login-overlay">
     <div class="login-card">
-        <h2>🔐 Connexion Admin</h2>
-        <input type="email" id="loginEmail" placeholder="Email administrateur">
-        <input type="password" id="loginPassword" placeholder="Mot de passe">
+        <div class="login-header">
+            <div class="login-logo">🏦</div>
+            <h2>Sunu Nata</h2>
+            <div class="login-subtitle">Gestion de tontine professionnelle</div>
+        </div>
+        <input type="email" id="loginEmail" placeholder="Adresse email">
+        <div class="password-container">
+            <input type="password" id="loginPassword" placeholder="Mot de passe">
+            <span class="toggle-password" onclick="togglePasswordVisibility()">👁️</span>
+        </div>
         <button id="loginBtn">Se connecter</button>
         
         <div class="divider">
             <span>ou</span>
         </div>
         
-        <button id="visitorLoginBtn" class="visitor-login-btn">👁️ Continuer en tant que visiteur</button>
+        <button id="visitorLoginBtn" class="visitor-login-btn">👁️ Mode visiteur</button>
         
         <div id="loginError" class="error"></div>
-        <div class="small-text mt-2">👁️ Les visiteurs peuvent consulter les données</div>
-        <div class="small-text mt-2">🔐 Seuls les administrateurs peuvent modifier</div>
+        <div class="small-text mt-2" style="color: #7c8ba0;">
+            🔐 Seuls les administrateurs peuvent modifier<br>
+            👁️ Les visiteurs peuvent consulter les données
+        </div>
     </div>
 </div>
+
+<script>
+    // Fonction pour afficher/masquer le mot de passe
+    window.togglePasswordVisibility = function() {
+        const passwordInput = document.getElementById('loginPassword');
+        const toggleIcon = document.querySelector('.toggle-password');
+        
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            toggleIcon.textContent = '🙈';
+        } else {
+            passwordInput.type = 'password';
+            toggleIcon.textContent = '👁️';
+        }
+    };
+</script>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
@@ -1151,6 +1297,28 @@
                 el.classList.remove('visible');
                 el.style.display = 'none';
             }
+        });
+    }
+
+    function showConfirmModal(title, message, onConfirm) {
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.innerHTML = `
+            <div class="modal-content confirm-modal">
+                <h3>${title}</h3>
+                <p>${message}</p>
+                <div class="confirm-actions">
+                    <button class="confirm-cancel">Annuler</button>
+                    <button class="confirm-delete">Confirmer</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        
+        modal.querySelector('.confirm-cancel').addEventListener('click', () => modal.remove());
+        modal.querySelector('.confirm-delete').addEventListener('click', () => {
+            onConfirm();
+            modal.remove();
         });
     }
 
@@ -1249,11 +1417,8 @@
         });
     }
 
-    // Fonction pour la connexion en tant que visiteur
     function loginAsVisitor() {
         document.getElementById("loginModal").style.display = "none";
-        // On reste en mode non authentifié
-        // Les données seront chargées via le listener
     }
 
     onAuthStateChanged(auth, (user) => {
@@ -1281,7 +1446,6 @@
         document.getElementById("loginModal").style.display = "flex";
     });
 
-    // Nouveau gestionnaire pour le bouton visiteur
     document.getElementById("visitorLoginBtn").addEventListener("click", loginAsVisitor);
 
     document.getElementById("loginBtn").addEventListener("click", async () => {
@@ -1487,13 +1651,22 @@
 
     function deleteMember(id) {
         if (!isAdmin) { alert("❌ Seul un admin peut supprimer des membres"); return; }
-        if (confirm("⚠️ Supprimer définitivement ce membre ?")) {
-            members = members.filter(m => m.id !== id);
-            payments = payments.filter(p => p.memberId !== id);
-            saveToFirebase();
-            applyFiltersAndSort();
-            renderAll();
-        }
+        
+        const memberToDelete = members.find(m => m.id === id);
+        if (!memberToDelete) return;
+        
+        showConfirmModal(
+            "⚠️ Supprimer un membre",
+            `Êtes-vous sûr de vouloir supprimer définitivement ${memberToDelete.prenom} ${memberToDelete.nom} ? Cette action est irréversible.`,
+            () => {
+                members = members.filter(m => m.id !== id);
+                payments = payments.filter(p => p.memberId !== id);
+                saveToFirebase();
+                applyFiltersAndSort();
+                renderAll();
+                alert(`✅ ${memberToDelete.prenom} ${memberToDelete.nom} a été supprimé.`);
+            }
+        );
     }
 
     function setPaymentStatus(memberId, sessionId, newStatus) {
@@ -1911,9 +2084,9 @@
                         <div class="member-phone">📞 ${m.telephone || "Non renseigné"}</div>
                         <div class="small-text">✅ ${stats.weeksPaid} payées | ❌ ${stats.weeksUnpaid} retards | 💰 ${stats.totalPaid.toLocaleString()} F</div>
                     </div>
-                    <div>
+                    <div class="member-actions">
                         <button class="details-btn" data-id="${m.id}">📋 Détails</button>
-                        ${isAdmin ? `<button class="delete-btn admin-only-inline" data-id="${m.id}">🗑️ Supprimer</button>` : ''}
+                        ${isAdmin ? `<button class="delete-btn admin-only-inline visible" data-id="${m.id}">🗑️ Supprimer</button>` : ''}
                     </div>
                 </div>
             `;
