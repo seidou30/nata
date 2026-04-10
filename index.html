@@ -1,0 +1,2269 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Sunu Nata - Gestion Tontine</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #f0f2f5 0%, #e8ecf1 100%);
+            padding: 16px 12px 40px 12px;
+            color: #1a2c3e;
+            min-height: 100vh;
+        }
+
+        .app-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        @media (min-width: 768px) {
+            body {
+                padding: 20px 24px 40px 24px;
+            }
+            .stats-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .app-container {
+                max-width: 1400px;
+            }
+        }
+
+        .login-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .login-card {
+            background: white;
+            border-radius: 32px;
+            padding: 32px 24px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px);}
+            to { opacity: 1; transform: translateY(0);}
+        }
+
+        .login-card h2 {
+            margin-bottom: 24px;
+            color: #1f6e43;
+        }
+
+        .login-card input {
+            width: 100%;
+            padding: 14px 16px;
+            margin-bottom: 16px;
+            border: 2px solid #e2edf2;
+            border-radius: 60px;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+
+        .login-card input:focus {
+            outline: none;
+            border-color: #1f6e43;
+        }
+
+        .login-card button {
+            width: 100%;
+            padding: 14px;
+            background: #1f6e43;
+            color: white;
+            border: none;
+            border-radius: 60px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.2s;
+        }
+
+        .login-card button:hover {
+            background: #2d8a55;
+            transform: translateY(-2px);
+        }
+
+        .login-card .error {
+            color: #bc4742;
+            margin-top: 12px;
+            font-size: 0.85rem;
+        }
+
+        .admin-badge {
+            background: linear-gradient(135deg, #1f6e43, #2d8a55);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 40px;
+            font-size: 0.8rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 2px 8px rgba(31,110,67,0.3);
+        }
+
+        .visitor-badge {
+            background: linear-gradient(135deg, #7c8ba0, #95a5a6);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 40px;
+            font-size: 0.8rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .logout-btn, .login-btn-header {
+            padding: 8px 20px;
+            border-radius: 40px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+
+        .logout-btn {
+            background: #e67e22;
+            color: white;
+        }
+
+        .logout-btn:hover {
+            background: #f39c12;
+            transform: translateY(-2px);
+        }
+
+        .login-btn-header {
+            background: #1f6e43;
+            color: white;
+        }
+
+        .login-btn-header:hover {
+            background: #2d8a55;
+            transform: translateY(-2px);
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 8px;
+            background: white;
+            padding: 8px;
+            border-radius: 60px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            position: sticky;
+            top: 8px;
+            z-index: 20;
+            backdrop-filter: blur(10px);
+            background: rgba(255,255,255,0.95);
+        }
+
+        @media (max-width: 480px) {
+            .nav-tabs {
+                gap: 4px;
+                padding: 6px;
+            }
+            .nav-btn {
+                padding: 10px 4px;
+                font-size: 0.75rem;
+            }
+        }
+
+        .nav-btn {
+            flex: 1;
+            text-align: center;
+            padding: 12px 8px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            border-radius: 50px;
+            background: transparent;
+            border: none;
+            color: #3a5a78;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .nav-btn.active {
+            background: linear-gradient(135deg, #1f6e43, #2d8a55);
+            color: white;
+            box-shadow: 0 2px 8px rgba(31,110,67,0.3);
+        }
+
+        .page {
+            display: none;
+            animation: fade 0.3s ease;
+        }
+
+        .page.active-page {
+            display: block;
+        }
+
+        @keyframes fade {
+            from { opacity: 0; transform: translateY(10px);}
+            to { opacity: 1; transform: translateY(0);}
+        }
+
+        .card {
+            background: white;
+            border-radius: 28px;
+            padding: 24px 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.05);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .card:hover {
+            box-shadow: 0 12px 32px rgba(0,0,0,0.1);
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: #0b3b2f;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        h3 {
+            font-size: 1.2rem;
+            margin-bottom: 16px;
+            color: #1f6e43;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+            margin: 16px 0;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #f8fafc, #ffffff);
+            border-radius: 20px;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid #e2edf2;
+            transition: transform 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #1f6e43;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: #7c8ba0;
+            margin-top: 8px;
+        }
+
+        .member-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #ffffff;
+            border-radius: 60px;
+            padding: 12px 20px;
+            margin-bottom: 10px;
+            border: 1px solid #e2edf2;
+            transition: all 0.2s;
+        }
+
+        .member-row:hover {
+            transform: translateX(4px);
+            border-color: #1f6e43;
+            box-shadow: 0 2px 8px rgba(31,110,67,0.1);
+        }
+
+        .member-info {
+            flex: 2;
+        }
+
+        .member-name {
+            font-weight: 700;
+            font-size: 1rem;
+        }
+
+        .member-phone {
+            font-size: 0.8rem;
+            color: #7c8ba0;
+        }
+
+        .delete-btn, .details-btn, .add-btn, .export-btn {
+            border: none;
+            padding: 8px 16px;
+            border-radius: 40px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-left: 8px;
+            transition: all 0.2s;
+        }
+
+        .delete-btn {
+            background: #fff0ee;
+            color: #bc4742;
+        }
+
+        .delete-btn:hover {
+            background: #bc4742;
+            color: white;
+            transform: scale(1.05);
+        }
+
+        .details-btn {
+            background: #eef2f9;
+            color: #1f6e43;
+        }
+
+        .details-btn:hover {
+            background: #1f6e43;
+            color: white;
+            transform: scale(1.05);
+        }
+
+        .export-btn {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            margin-left: 0;
+        }
+
+        .export-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .add-btn {
+            background: linear-gradient(135deg, #1f6e43, #2d8a55);
+            color: white;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        input, select {
+            padding: 12px 18px;
+            border-radius: 60px;
+            border: 2px solid #e2edf2;
+            font-size: 0.95rem;
+            font-family: inherit;
+            transition: border-color 0.2s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #1f6e43;
+        }
+
+        button {
+            background: linear-gradient(135deg, #1f6e43, #2d8a55);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 60px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(31,110,67,0.3);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .search-filter-bar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .search-box {
+            flex: 2;
+            min-width: 200px;
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding-left: 45px;
+        }
+
+        .search-box::before {
+            content: "🔍";
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.1rem;
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            background: #f0f4f8;
+            color: #3a5a78;
+            padding: 10px 20px;
+        }
+
+        .filter-btn.active {
+            background: linear-gradient(135deg, #1f6e43, #2d8a55);
+            color: white;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 24px;
+            flex-wrap: wrap;
+        }
+
+        .page-btn {
+            background: #f0f4f8;
+            color: #3a5a78;
+            padding: 8px 14px;
+            min-width: 40px;
+        }
+
+        .page-btn.active {
+            background: linear-gradient(135deg, #1f6e43, #2d8a55);
+            color: white;
+        }
+
+        .page-btn:hover:not(.active) {
+            background: #e2edf2;
+            transform: translateY(0);
+        }
+
+        .payment-table {
+            margin-top: 12px;
+            border-radius: 20px;
+            overflow-x: auto;
+        }
+
+        .payment-header, .payment-line {
+            display: grid;
+            grid-template-columns: 2fr 1.5fr 1fr;
+            padding: 12px 16px;
+        }
+
+        @media (max-width: 600px) {
+            .payment-header, .payment-line {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+        }
+
+        .payment-header {
+            background: #eef2f5;
+            font-weight: 700;
+            font-size: 0.85rem;
+        }
+
+        .payment-line {
+            border-bottom: 1px solid #e9edf2;
+            background: white;
+        }
+
+        .pay-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .btn-paid, .btn-unpaid {
+            padding: 6px 12px;
+            font-size: 0.75rem;
+            border-radius: 40px;
+        }
+
+        .btn-paid { background: #1f6e43; }
+        .btn-unpaid { background: #bc4742; }
+
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 30px;
+            font-size: 0.7rem;
+            font-weight: 700;
+        }
+
+        .status-paid { background: #dff0e5; color: #1f6e43; }
+        .status-unpaid { background: #ffe0db; color: #bc4742; }
+
+        .filter-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .year-filter {
+            background: #f0f4f8;
+            border-radius: 40px;
+            padding: 8px 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .year-filter.active {
+            background: linear-gradient(135deg, #1f6e43, #2d8a55);
+            color: white;
+        }
+
+        .month-filter {
+            background: #f0f4f8;
+            border-radius: 40px;
+            padding: 6px 14px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .month-filter.active {
+            background: linear-gradient(135deg, #e67e22, #f39c12);
+            color: white;
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            max-width: 95%;
+            width: 700px;
+            border-radius: 32px;
+            padding: 24px;
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+
+        .sync-status {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #1f6e43;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 40px;
+            font-size: 0.75rem;
+            z-index: 100;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .small-text { font-size: 0.75rem; color: #7c8ba0; }
+        .text-center { text-align: center; }
+        .mt-2 { margin-top: 12px; }
+        .mb-2 { margin-bottom: 12px; }
+        
+        .info-message {
+            background: linear-gradient(135deg, #e3f2fd, #bbdef5);
+            color: #1565c0;
+            padding: 12px 16px;
+            border-radius: 16px;
+            margin-bottom: 16px;
+            text-align: center;
+            font-size: 0.85rem;
+        }
+        
+        .admin-only { display: none; }
+        .admin-only.visible { display: block; }
+        .admin-only-inline { display: none; }
+        .admin-only-inline.visible { display: inline-block; }
+
+        .month-section {
+            margin-bottom: 20px;
+            border: 1px solid #e2edf2;
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        .month-header {
+            background: linear-gradient(135deg, #1f6e43, #2d8a55);
+            color: white;
+            padding: 12px 16px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .month-content {
+            padding: 8px 0;
+        }
+
+        .month-content.collapsed { display: none; }
+
+        .weekday-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 16px;
+            border-bottom: 1px solid #f0f2f5;
+        }
+
+        .year-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 40px;
+            color: #7c8ba0;
+        }
+
+        .result-count {
+            font-size: 0.85rem;
+            color: #7c8ba0;
+            margin-bottom: 12px;
+        }
+
+        .debt-amount {
+            font-weight: 800;
+            color: #e67e22;
+        }
+
+        .badge-warning {
+            background: #ffe0db;
+            color: #e67e22;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            margin-left: 8px;
+        }
+
+        .ranking-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        @media (min-width: 768px) {
+            .ranking-container {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .ranking-box {
+            background: #f8fafc;
+            border-radius: 20px;
+            padding: 16px;
+        }
+
+        .ranking-title {
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #1f6e43;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .debtor-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #e2edf2;
+        }
+
+        .debtor-info {
+            flex: 1;
+        }
+
+        .debtor-name {
+            font-weight: 600;
+        }
+
+        .debtor-details {
+            font-size: 0.7rem;
+            color: #7c8ba0;
+        }
+
+        .debtor-amount {
+            font-weight: 700;
+            color: #e67e22;
+        }
+
+        .stats-filter-bar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .stats-filter-btn {
+            background: #f0f4f8;
+            color: #3a5a78;
+            padding: 10px 24px;
+            border-radius: 40px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+
+        .stats-filter-btn.active {
+            background: linear-gradient(135deg, #1f6e43, #2d8a55);
+            color: white;
+        }
+
+        .stats-period-select {
+            padding: 10px 20px;
+            border-radius: 40px;
+            border: 2px solid #e2edf2;
+            background: white;
+            font-weight: 500;
+        }
+
+        .filter-indicator {
+            background: #eef2f5;
+            border-radius: 20px;
+            padding: 6px 12px;
+            font-size: 0.75rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .clear-stats-filter {
+            background: #7c8ba0;
+            padding: 6px 12px;
+            font-size: 0.7rem;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+
+        /* Nouveaux styles pour la recherche et le tri dans stats */
+        .stats-search-bar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+            background: #f8fafc;
+            padding: 16px;
+            border-radius: 20px;
+        }
+
+        .stats-search-box {
+            flex: 2;
+            min-width: 200px;
+            position: relative;
+        }
+
+        .stats-search-box input {
+            width: 100%;
+            padding: 12px 18px;
+            padding-left: 40px;
+            border-radius: 40px;
+            border: 2px solid #e2edf2;
+        }
+
+        .stats-search-box::before {
+            content: "🔍";
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1rem;
+        }
+
+        .sort-group {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .sort-btn {
+            background: #f0f4f8;
+            color: #3a5a78;
+            padding: 10px 16px;
+            border-radius: 40px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+
+        .sort-btn.active {
+            background: linear-gradient(135deg, #1f6e43, #2d8a55);
+            color: white;
+        }
+
+        .ranking-stats {
+            margin-bottom: 12px;
+            padding: 8px 12px;
+            background: #eef2f5;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            color: #3a5a78;
+        }
+    </style>
+</head>
+<body>
+<div class="app-container">
+    <div id="adminHeader" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
+        <div id="userInfo"></div>
+        <div id="headerButtons" style="display: flex; gap: 8px;">
+            <button id="exportAllPdfBtn" class="export-btn" style="background: linear-gradient(135deg, #e74c3c, #c0392b);">📄 Exporter tout en PDF</button>
+            <button id="showLoginBtnHeader" class="login-btn-header hidden">🔐 Connexion Admin</button>
+            <button id="logoutBtn" class="logout-btn hidden">🚪 Déconnexion</button>
+        </div>
+    </div>
+
+    <div class="nav-tabs">
+        <button class="nav-btn active" data-page="home">🏠 Accueil</button>
+        <button class="nav-btn" data-page="members">👥 Membres</button>
+        <button class="nav-btn" data-page="sessions">📆 Sessions</button>
+        <button class="nav-btn" data-page="stats">📊 Stats</button>
+    </div>
+
+    <div id="home" class="page active-page">
+        <div class="card">
+            <h2>🏦 Sunu Nata <span style="background:linear-gradient(135deg,#1f6e43,#2d8a55);color:white;padding:4px 12px;border-radius:20px;font-size:0.75rem;">2024-2031</span></h2>
+            <div class="stats-grid">
+                <div class="stat-card"><div class="stat-value" id="homeTotalMoney">0</div><div class="stat-label">Total collecté (FCFA)</div></div>
+                <div class="stat-card"><div class="stat-value" id="homeMembersCount">0</div><div class="stat-label">Membres</div></div>
+                <div class="stat-card"><div class="stat-value" id="homeSessionsCount">0</div><div class="stat-label">Sessions</div></div>
+            </div>
+            <div class="small-text mt-2">☁️ Données synchronisées avec Firebase</div>
+        </div>
+    </div>
+
+    <div id="members" class="page">
+        <div class="card">
+            <h2>👥 Membres</h2>
+            
+            <div class="search-filter-bar">
+                <div class="search-box">
+                    <input type="text" id="searchMemberInput" placeholder="🔍 Rechercher par nom, prénom ou téléphone...">
+                </div>
+                <div class="filter-group">
+                    <button id="sortAZBtn" class="filter-btn">A → Z</button>
+                    <button id="SortZABtn" class="filter-btn">Z → A</button>
+                </div>
+            </div>
+            
+            <div id="membersListContainer">
+                <div id="membersList"><div class="loading">Chargement...</div></div>
+                <div id="pagination" class="pagination"></div>
+            </div>
+            
+            <div id="addMemberForm" class="admin-only">
+                <div class="info-message">🔐 Mode Admin : Vous pouvez ajouter des membres</div>
+                <div class="form-row">
+                    <input type="text" id="memberNom" placeholder="Nom *">
+                    <input type="text" id="memberPrenom" placeholder="Prénom *">
+                    <input type="tel" id="memberTel" placeholder="Téléphone">
+                    <button id="addMemberBtn" class="add-btn">➕ Ajouter un membre</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="sessions" class="page">
+        <div class="card">
+            <h2>📆 Gérer les paiements <span style="background:linear-gradient(135deg,#1f6e43,#2d8a55);color:white;padding:4px 12px;border-radius:20px;font-size:0.75rem;">2024 → 2031</span></h2>
+            <div id="adminSessionControls" class="admin-only">
+                <div class="info-message">🔐 Mode Admin : Vous pouvez modifier les paiements et générer des sessions</div>
+                <div class="form-row">
+                    <button id="generateSessionsBtn">🔄 Générer tous les Jeudis 2024-2031</button>
+                </div>
+                <div class="small-text mt-2" style="color: #1f6e43;">
+                    📅 Cette action générera toutes les sessions des jeudis du 1er janvier 2024 au 31 décembre 2031
+                </div>
+                <hr>
+            </div>
+            <div class="filter-bar" id="yearFilterBar"></div>
+            <select id="sessionSelect" style="width:100%; margin-bottom: 12px;">
+                <option value="">-- Choisir une session --</option>
+            </select>
+            <div id="sessionPaymentsTable"></div>
+        </div>
+    </div>
+
+    <div id="stats" class="page">
+        <div class="card">
+            <h2>📊 Statistiques <span style="background:linear-gradient(135deg,#1f6e43,#2d8a55);color:white;padding:4px 12px;border-radius:20px;font-size:0.75rem;">2024-2031</span></h2>
+            
+            <!-- Barre de filtrage pour les statistiques -->
+            <div class="stats-filter-bar">
+                <button id="statsAllBtn" class="stats-filter-btn active">📅 Toutes périodes</button>
+                <button id="statsYearBtn" class="stats-filter-btn">📆 Par année</button>
+                <button id="statsMonthBtn" class="stats-filter-btn">📅 Par mois</button>
+                <select id="statsYearSelect" class="stats-period-select" style="display: none;">
+                    <option value="">Sélectionner une année</option>
+                </select>
+                <select id="statsMonthSelect" class="stats-period-select" style="display: none;">
+                    <option value="">Sélectionner un mois</option>
+                </select>
+                <div id="statsFilterInfo" class="filter-indicator" style="display: none;">
+                    <span id="statsFilterText"></span>
+                    <span id="clearStatsFilter" class="clear-stats-filter">❌ Effacer</span>
+                </div>
+            </div>
+            
+            <!-- NOUVEAU : Barre de recherche et de tri pour le classement -->
+            <div class="stats-search-bar">
+                <div class="stats-search-box">
+                    <input type="text" id="statsSearchInput" placeholder="🔍 Rechercher un membre...">
+                </div>
+                <div class="sort-group">
+                    <button id="sortByNameAsc" class="sort-btn" data-sort="name_asc">🔤 A → Z</button>
+                    <button id="sortByNameDesc" class="sort-btn" data-sort="name_desc">🔤 Z → A</button>
+                    <button id="sortByAmountAsc" class="sort-btn" data-sort="amount_asc">💰 Montant ↑</button>
+                    <button id="sortByAmountDesc" class="sort-btn active" data-sort="amount_desc">💰 Montant ↓</button>
+                    <button id="sortByUnpaidAsc" class="sort-btn" data-sort="unpaid_asc">❌ Impayées ↑</button>
+                    <button id="sortByUnpaidDesc" class="sort-btn" data-sort="unpaid_desc">❌ Impayées ↓</button>
+                </div>
+            </div>
+            
+            <div id="statsSummary"></div>
+        </div>
+        
+        <div class="card">
+            <div class="ranking-container">
+                <!-- Classement par contribution -->
+                <div class="ranking-box">
+                    <div class="ranking-title">
+                        🏆 Classement par contribution
+                        <span class="badge-warning">💰 Total versé</span>
+                    </div>
+                    <div id="rankingStats" class="ranking-stats"></div>
+                    <div id="rankingList"></div>
+                </div>
+                
+                <!-- Classement par remboursement / dette par mois -->
+                <div class="ranking-box">
+                    <div class="ranking-title">
+                        📅 Dette par mois
+                        <span class="badge-warning">⚠️ À rembourser</span>
+                    </div>
+                    <div style="margin-bottom: 12px;">
+                        <select id="debtMonthSelect" style="width: 100%; padding: 8px 12px;">
+                            <option value="">-- Sélectionner un mois --</option>
+                        </select>
+                    </div>
+                    <div id="debtRankingList">
+                        <div class="text-center small-text" style="padding: 20px;">Sélectionnez un mois pour voir les dettes</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="syncStatus" class="sync-status">✅ Synchronisé</div>
+
+<div id="loginModal" class="login-overlay">
+    <div class="login-card">
+        <h2>🔐 Connexion Admin</h2>
+        <input type="email" id="loginEmail" placeholder="Email administrateur">
+        <input type="password" id="loginPassword" placeholder="Mot de passe">
+        <button id="loginBtn">Se connecter</button>
+        <div id="loginError" class="error"></div>
+        <div class="small-text mt-2">👁️ Les visiteurs peuvent consulter les données</div>
+        <div class="small-text mt-2">🔐 Seuls les administrateurs peuvent modifier</div>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
+    import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
+    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyBVssQ6Q5mnRmMib7Ip_0jnbk4XdDCpJfc",
+        authDomain: "tontine-c6abe.firebaseapp.com",
+        projectId: "tontine-c6abe",
+        storageBucket: "tontine-c6abe.firebasestorage.app",
+        messagingSenderId: "113771469681",
+        appId: "1:113771469681:web:7ecc0bf22d9a3b6cb734d0",
+        measurementId: "G-PHJHD2P22M"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+    
+    const FIXED_AMOUNT = 2000;
+    const ITEMS_PER_PAGE = 10;
+    
+    let members = [];
+    let sessions = [];
+    let payments = [];
+    let currentYearFilter = "all";
+    let currentUser = null;
+    let isAdmin = false;
+    let isSyncing = false;
+    let unsubscribe = null;
+    
+    let currentSearchTerm = "";
+    let currentSortOrder = "asc";
+    let currentPage = 1;
+    let filteredMembers = [];
+    
+    // Variables pour le filtrage des statistiques
+    let statsFilterType = "all"; // 'all', 'year', 'month'
+    let statsSelectedYear = null;
+    let statsSelectedMonth = null;
+    
+    // NOUVELLES VARIABLES POUR LA RECHERCHE ET LE TRI DANS STATS
+    let statsSearchTerm = "";
+    let statsSortType = "amount_desc"; // name_asc, name_desc, amount_asc, amount_desc, unpaid_asc, unpaid_desc
+    let filteredRanking = [];
+
+    const ADMIN_UIDS = [
+        "6bZhaJ84pqYZHzmsSbTfMIuj4QV2",
+        "8nB4yM0qR3sU9wX2zA6cD7eF1gH2iJ",
+        "2cE6gI0kM4oQ8sU1wY5aB7dF9hJ3lN",
+        "7dF9hJ3lN5pR1tV3xZ7bD1fH4jL6nP"
+    ];
+
+    function checkIsAdmin(user) {
+        return user && ADMIN_UIDS.includes(user.uid);
+    }
+
+    function toggleAdminElements(showAdmin) {
+        const adminElements = document.querySelectorAll('.admin-only');
+        const adminInlineElements = document.querySelectorAll('.admin-only-inline');
+        
+        adminElements.forEach(el => {
+            if (showAdmin) {
+                el.classList.add('visible');
+                el.style.display = 'block';
+            } else {
+                el.classList.remove('visible');
+                el.style.display = 'none';
+            }
+        });
+        
+        adminInlineElements.forEach(el => {
+            if (showAdmin) {
+                el.classList.add('visible');
+                el.style.display = 'inline-block';
+            } else {
+                el.classList.remove('visible');
+                el.style.display = 'none';
+            }
+        });
+    }
+
+    function setupRealtimeListener() {
+        if (unsubscribe) unsubscribe();
+        
+        const docRef = doc(db, "tontine", "sunu_nata_data");
+        unsubscribe = onSnapshot(docRef, (docSnap) => {
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                members = data.members || [];
+                sessions = data.sessions || [];
+                payments = data.payments || [];
+                
+                sessions.forEach(s => {
+                    if (!s.year && s.id) s.year = parseInt(s.id.split('-')[0]);
+                });
+                
+                applyFiltersAndSort();
+                renderAll();
+                updateSyncStatus("success", "✅ Données chargées");
+            } else {
+                if (!isSyncing) initializeDefaultData();
+            }
+        }, (error) => {
+            console.error("Erreur de chargement:", error);
+            updateSyncStatus("error", "⚠️ Erreur de connexion");
+        });
+    }
+
+    function applyFiltersAndSort() {
+        let filtered = [...members];
+        
+        if (currentSearchTerm) {
+            const term = currentSearchTerm.toLowerCase();
+            filtered = filtered.filter(m => 
+                m.nom.toLowerCase().includes(term) ||
+                m.prenom.toLowerCase().includes(term) ||
+                (m.telephone && m.telephone.includes(term))
+            );
+        }
+        
+        filtered.sort((a, b) => {
+            const nameA = `${a.prenom} ${a.nom}`.toLowerCase();
+            const nameB = `${b.prenom} ${b.nom}`.toLowerCase();
+            if (currentSortOrder === "asc") {
+                return nameA.localeCompare(nameB);
+            } else {
+                return nameB.localeCompare(nameA);
+            }
+        });
+        
+        filteredMembers = filtered;
+        currentPage = 1;
+    }
+
+    function getPaginatedMembers() {
+        const start = (currentPage - 1) * ITEMS_PER_PAGE;
+        const end = start + ITEMS_PER_PAGE;
+        return filteredMembers.slice(start, end);
+    }
+
+    function renderPagination() {
+        const totalPages = Math.ceil(filteredMembers.length / ITEMS_PER_PAGE);
+        const paginationDiv = document.getElementById("pagination");
+        
+        if (totalPages <= 1) {
+            paginationDiv.innerHTML = "";
+            return;
+        }
+        
+        let html = `<button class="page-btn" data-page="prev" ${currentPage === 1 ? 'disabled' : ''}>◀</button>`;
+        
+        for (let i = 1; i <= Math.min(totalPages, 5); i++) {
+            html += `<button class="page-btn ${currentPage === i ? 'active' : ''}" data-page="${i}">${i}</button>`;
+        }
+        
+        if (totalPages > 5) {
+            html += `<span>...</span>`;
+            html += `<button class="page-btn" data-page="${totalPages}">${totalPages}</button>`;
+        }
+        
+        html += `<button class="page-btn" data-page="next" ${currentPage === totalPages ? 'disabled' : ''}>▶</button>`;
+        
+        paginationDiv.innerHTML = html;
+        
+        document.querySelectorAll('.page-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (btn.disabled) return;
+                const page = btn.dataset.page;
+                if (page === 'prev') currentPage--;
+                else if (page === 'next') currentPage++;
+                else currentPage = parseInt(page);
+                renderMembersPage();
+            });
+        });
+    }
+
+    onAuthStateChanged(auth, (user) => {
+        currentUser = user;
+        isAdmin = checkIsAdmin(user);
+        
+        if (user && isAdmin) {
+            document.getElementById("loginModal").style.display = "none";
+            document.getElementById("logoutBtn").classList.remove("hidden");
+            document.getElementById("showLoginBtnHeader").classList.add("hidden");
+            document.getElementById("userInfo").innerHTML = `<span class="admin-badge">👑 Admin: ${user.email}</span>`;
+            toggleAdminElements(true);
+            setupRealtimeListener();
+        } else {
+            if (user && !isAdmin) signOut(auth);
+            document.getElementById("logoutBtn").classList.add("hidden");
+            document.getElementById("showLoginBtnHeader").classList.remove("hidden");
+            document.getElementById("userInfo").innerHTML = `<span class="visitor-badge">👁️ Mode visiteurs</span>`;
+            toggleAdminElements(false);
+            setupRealtimeListener();
+        }
+    });
+
+    document.getElementById("showLoginBtnHeader").addEventListener("click", () => {
+        document.getElementById("loginModal").style.display = "flex";
+    });
+
+    document.getElementById("loginBtn").addEventListener("click", async () => {
+        const email = document.getElementById("loginEmail").value;
+        const password = document.getElementById("loginPassword").value;
+        const errorDiv = document.getElementById("loginError");
+        
+        errorDiv.textContent = "";
+        if (!email || !password) {
+            errorDiv.textContent = "❌ Veuillez remplir tous les champs";
+            return;
+        }
+        
+        try {
+            const userCredential = await signInWithEmailAndPassword(auth, email, password);
+            const user = userCredential.user;
+            
+            if (!ADMIN_UIDS.includes(user.uid)) {
+                errorDiv.textContent = "❌ Ce compte n'a pas les droits administrateur.";
+                await signOut(auth);
+                return;
+            }
+            
+            document.getElementById("loginModal").style.display = "none";
+            document.getElementById("loginEmail").value = "";
+            document.getElementById("loginPassword").value = "";
+            
+        } catch (error) {
+            if (error.code === 'auth/invalid-credential') {
+                errorDiv.textContent = "❌ Email ou mot de passe incorrect.";
+            } else {
+                errorDiv.textContent = "❌ Erreur: " + error.message;
+            }
+        }
+    });
+
+    document.getElementById("logoutBtn").addEventListener("click", async () => {
+        await signOut(auth);
+        alert("Déconnecté. Mode visiteurs activé.");
+    });
+
+    async function saveToFirebase() {
+        if (isSyncing || !isAdmin) return;
+        
+        isSyncing = true;
+        updateSyncStatus("syncing", "🔄 Synchronisation...");
+        
+        try {
+            const dataToSave = { members, sessions, payments, lastUpdated: new Date().toISOString() };
+            await setDoc(doc(db, "tontine", "sunu_nata_data"), dataToSave);
+            updateSyncStatus("success", "✅ Synchronisé");
+        } catch (error) {
+            console.error("Erreur de sauvegarde:", error);
+            updateSyncStatus("error", "⚠️ Erreur de sauvegarde");
+        } finally {
+            isSyncing = false;
+        }
+    }
+
+    function updateSyncStatus(status, message) {
+        const statusDiv = document.getElementById("syncStatus");
+        statusDiv.textContent = message;
+        statusDiv.style.opacity = "1";
+        if (status === "success" || status === "error") {
+            setTimeout(() => {
+                if (statusDiv.textContent === message) statusDiv.style.opacity = "0.7";
+            }, 2000);
+        }
+    }
+
+    function getAllThursdays(startDate, endDate) {
+        let thursdays = [];
+        let current = new Date(startDate);
+        while (current.getDay() !== 4) current.setDate(current.getDate() + 1);
+        while (current <= endDate) {
+            thursdays.push(new Date(current));
+            current.setDate(current.getDate() + 7);
+        }
+        return thursdays;
+    }
+
+    function formatDateYMD(date) {
+        let d = new Date(date);
+        return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    }
+    
+    function formatFrenchDate(date) {
+        return new Date(date).toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    }
+
+    async function initializeDefaultData() {
+        members = [
+            { id: "m1", nom: "Diop", prenom: "Fatou", telephone: "77 111 22 33" },
+            { id: "m2", nom: "Ndiaye", prenom: "Oumar", telephone: "78 444 55 66" },
+            { id: "m3", nom: "Sow", prenom: "Aissatou", telephone: "70 123 45 67" },
+            { id: "m4", nom: "Fall", prenom: "Mamadou", telephone: "76 789 01 23" },
+            { id: "m5", nom: "Gueye", prenom: "Aminata", telephone: "77 456 78 90" }
+        ];
+        
+        const startDate = new Date(2024, 0, 1);
+        const endDate = new Date(2031, 11, 31);
+        const thursList = getAllThursdays(startDate, endDate);
+        sessions = [];
+        
+        for (let d of thursList) {
+            sessions.push({
+                id: formatDateYMD(d),
+                dateLabel: formatFrenchDate(d),
+                timestamp: d.getTime(),
+                year: d.getFullYear()
+            });
+        }
+        sessions.sort((a,b) => a.timestamp - b.timestamp);
+        
+        payments = [];
+        for (let session of sessions) {
+            for (let member of members) {
+                payments.push({
+                    id: `${member.id}_${session.id}`,
+                    memberId: member.id,
+                    sessionId: session.id,
+                    status: "unpaid",
+                    amount: FIXED_AMOUNT
+                });
+            }
+        }
+        
+        await saveToFirebase();
+    }
+
+    function generateAllSessions() {
+        if (!isAdmin) { alert("❌ Seul un admin peut générer des sessions"); return; }
+        
+        const startDate = new Date(2024, 0, 1);
+        const endDate = new Date(2031, 11, 31);
+        const allThurs = getAllThursdays(startDate, endDate);
+        const existingIds = new Set(sessions.map(s => s.id));
+        const newSessions = [];
+        
+        for (let d of allThurs) {
+            let sessionId = formatDateYMD(d);
+            if (!existingIds.has(sessionId)) {
+                newSessions.push({
+                    id: sessionId,
+                    dateLabel: formatFrenchDate(d),
+                    timestamp: d.getTime(),
+                    year: d.getFullYear()
+                });
+            }
+        }
+        
+        if (newSessions.length > 0) {
+            sessions.push(...newSessions);
+            sessions.sort((a,b) => a.timestamp - b.timestamp);
+            
+            for (let session of newSessions) {
+                for (let member of members) {
+                    payments.push({
+                        id: `${member.id}_${session.id}`,
+                        memberId: member.id,
+                        sessionId: session.id,
+                        status: "unpaid",
+                        amount: FIXED_AMOUNT
+                    });
+                }
+            }
+            saveToFirebase();
+            renderAll();
+            alert(`✅ ${newSessions.length} nouvelles sessions ajoutées`);
+        } else {
+            alert("✅ Toutes les sessions existent déjà");
+        }
+    }
+
+    function addMember(nom, prenom, tel) {
+        if (!isAdmin) { alert("❌ Seul un admin peut ajouter des membres"); return false; }
+        if (!nom.trim() || !prenom.trim()) { alert("❌ Nom et prénom requis"); return false; }
+        
+        let newId = "m_" + Date.now() + "_" + Math.random().toString(36).substr(2, 6);
+        const newMember = {
+            id: newId,
+            nom: nom.trim(),
+            prenom: prenom.trim(),
+            telephone: tel.trim() || ""
+        };
+        members.push(newMember);
+        
+        for (let session of sessions) {
+            payments.push({
+                id: `${newId}_${session.id}`,
+                memberId: newId,
+                sessionId: session.id,
+                status: "unpaid",
+                amount: FIXED_AMOUNT
+            });
+        }
+        
+        saveToFirebase();
+        applyFiltersAndSort();
+        renderAll();
+        return true;
+    }
+
+    function deleteMember(id) {
+        if (!isAdmin) { alert("❌ Seul un admin peut supprimer des membres"); return; }
+        if (confirm("⚠️ Supprimer définitivement ce membre ?")) {
+            members = members.filter(m => m.id !== id);
+            payments = payments.filter(p => p.memberId !== id);
+            saveToFirebase();
+            applyFiltersAndSort();
+            renderAll();
+        }
+    }
+
+    function setPaymentStatus(memberId, sessionId, newStatus) {
+        if (!isAdmin) { alert("❌ Seul un admin peut modifier les paiements"); return; }
+        let payment = payments.find(p => p.memberId === memberId && p.sessionId === sessionId);
+        if (payment) {
+            payment.status = newStatus;
+            saveToFirebase();
+            renderAll();
+        }
+    }
+
+    function getMemberStats(memberId) {
+        let memberPayments = payments.filter(p => p.memberId === memberId);
+        let totalPaid = memberPayments.filter(p => p.status === "paid").reduce((sum, p) => sum + p.amount, 0);
+        let weeksPaid = memberPayments.filter(p => p.status === "paid").length;
+        let weeksUnpaid = memberPayments.filter(p => p.status === "unpaid").length;
+        return { totalPaid, weeksPaid, weeksUnpaid, debt: weeksUnpaid * FIXED_AMOUNT };
+    }
+
+    function getFilteredStats() {
+        let filteredPayments = [...payments];
+        
+        if (statsFilterType === "year" && statsSelectedYear) {
+            const yearSessions = sessions.filter(s => s.year === statsSelectedYear).map(s => s.id);
+            filteredPayments = filteredPayments.filter(p => yearSessions.includes(p.sessionId));
+        } else if (statsFilterType === "month" && statsSelectedYear !== null && statsSelectedMonth !== null) {
+            const monthSessions = sessions.filter(s => {
+                const date = new Date(s.timestamp);
+                return date.getFullYear() === statsSelectedYear && date.getMonth() === statsSelectedMonth;
+            }).map(s => s.id);
+            filteredPayments = filteredPayments.filter(p => monthSessions.includes(p.sessionId));
+        }
+        
+        const totalCollected = filteredPayments.filter(p => p.status === "paid").reduce((sum, p) => sum + p.amount, 0);
+        const totalPossible = filteredPayments.length * FIXED_AMOUNT;
+        const totalDebt = totalPossible - totalCollected;
+        
+        return { totalCollected, totalPossible, totalDebt, paymentCount: filteredPayments.length };
+    }
+
+    // NOUVELLE FONCTION : Obtenir le classement filtré par période ET par recherche
+    function getFilteredRanking() {
+        let filteredPayments = [...payments];
+        
+        if (statsFilterType === "year" && statsSelectedYear) {
+            const yearSessions = sessions.filter(s => s.year === statsSelectedYear).map(s => s.id);
+            filteredPayments = filteredPayments.filter(p => yearSessions.includes(p.sessionId));
+        } else if (statsFilterType === "month" && statsSelectedYear !== null && statsSelectedMonth !== null) {
+            const monthSessions = sessions.filter(s => {
+                const date = new Date(s.timestamp);
+                return date.getFullYear() === statsSelectedYear && date.getMonth() === statsSelectedMonth;
+            }).map(s => s.id);
+            filteredPayments = filteredPayments.filter(p => monthSessions.includes(p.sessionId));
+        }
+        
+        let ranking = members.map(member => {
+            const memberPayments = filteredPayments.filter(p => p.memberId === member.id);
+            const totalPaid = memberPayments.filter(p => p.status === "paid").reduce((sum, p) => sum + p.amount, 0);
+            const weeksPaid = memberPayments.filter(p => p.status === "paid").length;
+            const weeksUnpaid = memberPayments.filter(p => p.status === "unpaid").length;
+            return {
+                id: member.id,
+                name: `${member.prenom} ${member.nom}`,
+                fullName: `${member.prenom} ${member.nom}`.toLowerCase(),
+                total: totalPaid,
+                unpaid: weeksUnpaid,
+                debt: weeksUnpaid * FIXED_AMOUNT,
+                phone: member.telephone || "Non renseigné"
+            };
+        });
+        
+        // Appliquer la recherche
+        if (statsSearchTerm) {
+            const term = statsSearchTerm.toLowerCase();
+            ranking = ranking.filter(r => r.fullName.includes(term) || (r.phone && r.phone.includes(term)));
+        }
+        
+        // Appliquer le tri
+        ranking.sort((a, b) => {
+            switch(statsSortType) {
+                case "name_asc":
+                    return a.fullName.localeCompare(b.fullName);
+                case "name_desc":
+                    return b.fullName.localeCompare(a.fullName);
+                case "amount_asc":
+                    return a.total - b.total;
+                case "amount_desc":
+                    return b.total - a.total;
+                case "unpaid_asc":
+                    return a.unpaid - b.unpaid;
+                case "unpaid_desc":
+                    return b.unpaid - a.unpaid;
+                default:
+                    return b.total - a.total;
+            }
+        });
+        
+        filteredRanking = ranking;
+        return ranking;
+    }
+
+    function getMemberDebtByMonth(memberId, year, month) {
+        let monthSessions = sessions.filter(s => {
+            let date = new Date(s.timestamp);
+            return date.getFullYear() === year && date.getMonth() === month;
+        });
+        
+        let totalDebt = 0;
+        let unpaidSessions = [];
+        
+        monthSessions.forEach(session => {
+            let payment = payments.find(p => p.memberId === memberId && p.sessionId === session.id);
+            if (payment && payment.status === "unpaid") {
+                totalDebt += FIXED_AMOUNT;
+                unpaidSessions.push(session);
+            }
+        });
+        
+        return { totalDebt, unpaidCount: unpaidSessions.length, sessions: unpaidSessions };
+    }
+
+    function populateMonthSelector() {
+        const select = document.getElementById("debtMonthSelect");
+        if (!select) return;
+        
+        const years = [...new Set(sessions.map(s => s.year))].sort((a,b) => a-b);
+        const monthsNames = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+        
+        let html = '<option value="">-- Sélectionner un mois --</option>';
+        
+        for (let year of years) {
+            const yearSessions = sessions.filter(s => s.year === year);
+            const monthsWithSessions = [...new Set(yearSessions.map(s => new Date(s.timestamp).getMonth()))];
+            
+            if (monthsWithSessions.length > 0) {
+                html += `<optgroup label="📅 ${year}">`;
+                for (let month of monthsWithSessions) {
+                    const sessionCount = yearSessions.filter(s => new Date(s.timestamp).getMonth() === month).length;
+                    html += `<option value="${year}-${month}">${monthsNames[month]} ${year} (${sessionCount} séances)</option>`;
+                }
+                html += `</optgroup>`;
+            }
+        }
+        
+        select.innerHTML = html;
+        
+        select.onchange = () => {
+            if (select.value) {
+                const [year, month] = select.value.split('-');
+                renderDebtRanking(parseInt(year), parseInt(month));
+            } else {
+                document.getElementById("debtRankingList").innerHTML = '<div class="text-center small-text" style="padding: 20px;">Sélectionnez un mois pour voir les dettes</div>';
+            }
+        };
+    }
+
+    function renderDebtRanking(year, month) {
+        const monthsNames = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+        
+        let debts = members.map(member => {
+            const debt = getMemberDebtByMonth(member.id, year, month);
+            return {
+                id: member.id,
+                name: `${member.prenom} ${member.nom}`,
+                phone: member.telephone,
+                totalDebt: debt.totalDebt,
+                unpaidCount: debt.unpaidCount,
+                sessions: debt.sessions
+            };
+        }).filter(d => d.totalDebt > 0).sort((a, b) => b.totalDebt - a.totalDebt);
+        
+        const container = document.getElementById("debtRankingList");
+        
+        if (debts.length === 0) {
+            container.innerHTML = `<div class="text-center small-text" style="padding: 20px;">✅ Tous les membres ont payé pour ${monthsNames[month]} ${year} !</div>`;
+            return;
+        }
+        
+        let totalDebtAmount = debts.reduce((sum, d) => sum + d.totalDebt, 0);
+        
+        container.innerHTML = `
+            <div style="margin-bottom: 12px; padding: 8px; background: #fff0ee; border-radius: 12px; text-align: center;">
+                <span style="font-weight: 700;">Total dû pour ${monthsNames[month]} ${year}: ${totalDebtAmount.toLocaleString()} FCFA</span>
+            </div>
+            ${debts.map((d, index) => `
+                <div class="debtor-item">
+                    <div class="debtor-info">
+                        <div class="debtor-name">
+                            ${index + 1}. ${escapeHtml(d.name)}
+                            ${d.unpaidCount > 1 ? `<span class="badge-warning">${d.unpaidCount} séances</span>` : ''}
+                        </div>
+                        <div class="debtor-details">📞 ${d.phone || 'Non renseigné'}</div>
+                    </div>
+                    <div class="debtor-amount">${d.totalDebt.toLocaleString()} F</div>
+                </div>
+            `).join('')}
+        `;
+    }
+
+    function populateStatsYearSelect() {
+        const select = document.getElementById("statsYearSelect");
+        if (!select) return;
+        
+        const years = [...new Set(sessions.map(s => s.year))].sort((a,b) => b-a);
+        let html = '<option value="">Sélectionner une année</option>';
+        
+        for (let year of years) {
+            const sessionCount = sessions.filter(s => s.year === year).length;
+            html += `<option value="${year}">📅 ${year} (${sessionCount} séances)</option>`;
+        }
+        
+        select.innerHTML = html;
+        
+        select.onchange = () => {
+            if (select.value) {
+                statsSelectedYear = parseInt(select.value);
+                statsFilterType = "year";
+                updateStatsFilterUI();
+                renderStatsPage();
+            }
+        };
+    }
+    
+    function populateStatsMonthSelect() {
+        const select = document.getElementById("statsMonthSelect");
+        if (!select) return;
+        
+        const years = [...new Set(sessions.map(s => s.year))].sort((a,b) => b-a);
+        const monthsNames = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+        
+        let html = '<option value="">Sélectionner un mois</option>';
+        
+        for (let year of years) {
+            const yearSessions = sessions.filter(s => s.year === year);
+            const monthsWithSessions = [...new Set(yearSessions.map(s => new Date(s.timestamp).getMonth()))];
+            
+            if (monthsWithSessions.length > 0) {
+                html += `<optgroup label="📅 ${year}">`;
+                for (let month of monthsWithSessions.sort((a,b) => a-b)) {
+                    const sessionCount = yearSessions.filter(s => new Date(s.timestamp).getMonth() === month).length;
+                    html += `<option value="${year}-${month}">${monthsNames[month]} ${year} (${sessionCount} séances)</option>`;
+                }
+                html += `</optgroup>`;
+            }
+        }
+        
+        select.innerHTML = html;
+        
+        select.onchange = () => {
+            if (select.value) {
+                const [year, month] = select.value.split('-');
+                statsSelectedYear = parseInt(year);
+                statsSelectedMonth = parseInt(month);
+                statsFilterType = "month";
+                updateStatsFilterUI();
+                renderStatsPage();
+            }
+        };
+    }
+    
+    function updateStatsFilterUI() {
+        const allBtn = document.getElementById("statsAllBtn");
+        const yearBtn = document.getElementById("statsYearBtn");
+        const monthBtn = document.getElementById("statsMonthBtn");
+        const yearSelect = document.getElementById("statsYearSelect");
+        const monthSelect = document.getElementById("statsMonthSelect");
+        const filterInfo = document.getElementById("statsFilterInfo");
+        const filterText = document.getElementById("statsFilterText");
+        
+        allBtn.classList.remove("active");
+        yearBtn.classList.remove("active");
+        monthBtn.classList.remove("active");
+        
+        yearSelect.style.display = "none";
+        monthSelect.style.display = "none";
+        
+        const monthsNames = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+        
+        if (statsFilterType === "all") {
+            allBtn.classList.add("active");
+            filterInfo.style.display = "none";
+        } else if (statsFilterType === "year") {
+            yearBtn.classList.add("active");
+            yearSelect.style.display = "block";
+            if (statsSelectedYear) {
+                yearSelect.value = statsSelectedYear;
+                filterInfo.style.display = "flex";
+                filterText.innerHTML = `📆 Année ${statsSelectedYear}`;
+            } else {
+                filterInfo.style.display = "none";
+            }
+        } else if (statsFilterType === "month") {
+            monthBtn.classList.add("active");
+            monthSelect.style.display = "block";
+            if (statsSelectedYear !== null && statsSelectedMonth !== null) {
+                monthSelect.value = `${statsSelectedYear}-${statsSelectedMonth}`;
+                filterInfo.style.display = "flex";
+                filterText.innerHTML = `📅 ${monthsNames[statsSelectedMonth]} ${statsSelectedYear}`;
+            } else {
+                filterInfo.style.display = "none";
+            }
+        }
+    }
+    
+    function resetStatsFilter() {
+        statsFilterType = "all";
+        statsSelectedYear = null;
+        statsSelectedMonth = null;
+        updateStatsFilterUI();
+        renderStatsPage();
+    }
+    
+    // NOUVELLE FONCTION : Mettre à jour l'UI des boutons de tri
+    function updateSortButtonsUI() {
+        document.querySelectorAll('.sort-btn').forEach(btn => {
+            btn.classList.remove('active');
+            if (btn.dataset.sort === statsSortType) {
+                btn.classList.add('active');
+            }
+        });
+    }
+
+    async function exportToPDF() {
+        const { jsPDF } = await import('https://cdn.skypack.dev/jspdf@2.5.1');
+        const { default: html2canvas } = await import('https://cdn.skypack.dev/html2canvas@1.4.1');
+        
+        const stats = getFilteredStats();
+        const ranking = getFilteredRanking();
+        let periodText = "Toutes périodes";
+        
+        if (statsFilterType === "year" && statsSelectedYear) {
+            periodText = `Année ${statsSelectedYear}`;
+        } else if (statsFilterType === "month" && statsSelectedYear !== null && statsSelectedMonth !== null) {
+            const monthsNames = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+            periodText = `${monthsNames[statsSelectedMonth]} ${statsSelectedYear}`;
+        }
+        
+        const element = document.createElement('div');
+        element.innerHTML = `
+            <div style="padding: 20px; font-family: Arial, sans-serif;">
+                <h1 style="color: #1f6e43; text-align: center;">📊 Sunu Nata - Rapport complet</h1>
+                <p style="text-align: center;">Généré le ${new Date().toLocaleDateString('fr-FR')}</p>
+                <p style="text-align: center; background: #eef2f5; padding: 8px; border-radius: 8px;">Période: ${periodText}</p>
+                ${statsSearchTerm ? `<p style="text-align: center; background: #e3f2fd; padding: 8px; border-radius: 8px;">🔍 Recherche: "${statsSearchTerm}"</p>` : ''}
+                <hr>
+                <h2>📈 Statistiques générales</h2>
+                <p>💰 Total collecté: ${stats.totalCollected.toLocaleString()} FCFA</p>
+                <p>💸 Dette totale: ${stats.totalDebt.toLocaleString()} FCFA</p>
+                <p>👥 Nombre de membres: ${members.length}</p>
+                <p>📊 Membres affichés: ${ranking.length}</p>
+                <hr>
+                <h2>🏆 Classement par contribution (${ranking.length} membres)</h2>
+                <table style="width:100%; border-collapse: collapse;">
+                    <tr style="background: #1f6e43; color: white;">
+                        <th style="padding: 8px; border: 1px solid #ddd;">Rang</th>
+                        <th style="padding: 8px; border: 1px solid #ddd;">Nom complet</th>
+                        <th style="padding: 8px; border: 1px solid #ddd;">Total versé</th>
+                        <th style="padding: 8px; border: 1px solid #ddd;">Impayées</th>
+                    </tr>
+                    ${ranking.map((r, i) => `
+                        <tr>
+                            <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${i+1}</td>
+                            <td style="padding: 8px; border: 1px solid #ddd;">${escapeHtml(r.name)}</td>
+                            <td style="padding: 8px; border: 1px solid #ddd; text-align: right;">${r.total.toLocaleString()} F</td>
+                            <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${r.unpaid}</td>
+                        </tr>
+                    `).join('')}
+                </table>
+            </div>
+        `;
+        
+        document.body.appendChild(element);
+        const canvas = await html2canvas(element, { scale: 2 });
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const imgWidth = 210;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+        pdf.save(`sunu_nata_rapport_${periodText.replace(/ /g, '_')}.pdf`);
+        document.body.removeChild(element);
+    }
+
+    function renderAll() {
+        renderHome();
+        renderMembersPage();
+        renderYearFilter();
+        renderSessionsPage();
+        renderStatsPage();
+        populateMonthSelector();
+        populateStatsYearSelect();
+        populateStatsMonthSelect();
+    }
+
+    function renderHome() {
+        let totalCollected = payments.filter(p => p.status === "paid").reduce((s,p) => s + p.amount, 0);
+        document.getElementById("homeTotalMoney").innerText = totalCollected.toLocaleString();
+        document.getElementById("homeMembersCount").innerText = members.length;
+        document.getElementById("homeSessionsCount").innerText = sessions.length;
+    }
+
+    function renderMembersPage() {
+        let container = document.getElementById("membersList");
+        const paginatedMembers = getPaginatedMembers();
+        
+        if (paginatedMembers.length === 0) {
+            container.innerHTML = `<div class="no-results">😕 Aucun membre trouvé pour "${currentSearchTerm || 'cette recherche'}"</div>`;
+            renderPagination();
+            return;
+        }
+        
+        container.innerHTML = `<div class="result-count">📊 ${filteredMembers.length} membre(s) trouvé(s)</div>` + 
+            paginatedMembers.map(m => {
+            let stats = getMemberStats(m.id);
+            return `
+                <div class="member-row">
+                    <div class="member-info">
+                        <div class="member-name">${escapeHtml(m.prenom)} ${escapeHtml(m.nom)}</div>
+                        <div class="member-phone">📞 ${m.telephone || "Non renseigné"}</div>
+                        <div class="small-text">✅ ${stats.weeksPaid} payées | ❌ ${stats.weeksUnpaid} retards | 💰 ${stats.totalPaid.toLocaleString()} F</div>
+                    </div>
+                    <div>
+                        <button class="details-btn" data-id="${m.id}">📋 Détails</button>
+                        ${isAdmin ? `<button class="delete-btn admin-only-inline" data-id="${m.id}">🗑️ Supprimer</button>` : ''}
+                    </div>
+                </div>
+            `;
+        }).join('');
+        
+        document.querySelectorAll('.details-btn').forEach(btn => {
+            btn.addEventListener('click', () => showMemberDetails(btn.getAttribute('data-id')));
+        });
+        
+        if (isAdmin) {
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', () => deleteMember(btn.getAttribute('data-id')));
+            });
+        }
+        
+        renderPagination();
+    }
+
+    function showMemberDetails(memberId) {
+        let member = members.find(m => m.id === memberId);
+        if (!member) return;
+        
+        const availableYears = [...new Set(sessions.map(s => s.year))].sort((a,b) => b - a);
+        let currentDetailYear = availableYears[0] || 2024;
+        
+        function renderDetailContent(year) {
+            let yearSessions = sessions.filter(s => s.year === year).sort((a,b) => a.timestamp - b.timestamp);
+            let sessionsByMonth = {};
+            yearSessions.forEach(sess => {
+                let month = new Date(sess.timestamp).getMonth();
+                if (!sessionsByMonth[month]) sessionsByMonth[month] = [];
+                sessionsByMonth[month].push(sess);
+            });
+            
+            let memberPayments = payments.filter(p => p.memberId === memberId);
+            let paidCount = 0, unpaidCount = 0, totalYearAmount = 0;
+            
+            yearSessions.forEach(sess => {
+                let payment = memberPayments.find(p => p.sessionId === sess.id);
+                if (payment) {
+                    if (payment.status === "paid") { paidCount++; totalYearAmount += payment.amount; }
+                    else unpaidCount++;
+                }
+            });
+            
+            let monthsNames = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+            let monthsHtml = '';
+            
+            for (let i = 0; i < 12; i++) {
+                let monthSessions = sessionsByMonth[i] || [];
+                if (monthSessions.length === 0) continue;
+                
+                let monthPaid = 0, monthUnpaid = 0;
+                monthSessions.forEach(sess => {
+                    let payment = memberPayments.find(p => p.sessionId === sess.id);
+                    if (payment && payment.status === "paid") monthPaid++;
+                    else if (payment) monthUnpaid++;
+                });
+                
+                let sessionsHtml = '';
+                monthSessions.forEach(sess => {
+                    let payment = memberPayments.find(p => p.sessionId === sess.id);
+                    let status = payment ? payment.status : "unpaid";
+                    let statusText = status === 'paid' ? '✅ PAYÉ' : '❌ NON PAYÉ';
+                    let statusClass = status === 'paid' ? 'status-paid' : 'status-unpaid';
+                    sessionsHtml += `<div class="weekday-item"><span>${sess.dateLabel}</span><span class="status-badge ${statusClass}">${statusText}</span></div>`;
+                });
+                
+                monthsHtml += `<div class="month-section"><div class="month-header" data-month="${i}"><span>📅 ${monthsNames[i]} ${year} (${monthPaid}✅ / ${monthUnpaid}❌)</span><span class="toggle-icon">▼</span></div><div class="month-content">${sessionsHtml}</div></div>`;
+            }
+            
+            return { monthsHtml, paidCount, unpaidCount, totalYearAmount };
+        }
+        
+        function buildModal(year) {
+            let content = renderDetailContent(year);
+            let yearsNavHtml = `<div class="year-nav"><button id="prevYearBtn" ${year <= Math.min(...availableYears) ? 'disabled' : ''}>◀ Année précédente</button><span class="current-year-display">${year}</span><button id="nextYearBtn" ${year >= Math.max(...availableYears) ? 'disabled' : ''}>Année suivante ▶</button></div>`;
+            
+            return `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;"><div><h3>${escapeHtml(member.prenom)} ${escapeHtml(member.nom)}</h3></div><span class="close-modal" style="cursor:pointer; font-size:24px;">&times;</span></div>
+                    <div style="display:flex; justify-content:space-around; margin-bottom:20px; background:#f8fafc; padding:12px; border-radius:16px;"><div><div style="font-size:1.3rem; font-weight:800; color:#1f6e43;">${content.paidCount}</div><div class="small-text">✅ Payées</div></div><div><div style="font-size:1.3rem; font-weight:800; color:#e67e22;">${content.unpaidCount}</div><div class="small-text">❌ Impayées</div></div><div><div style="font-size:1.3rem; font-weight:800; color:#1f6e43;">${content.totalYearAmount.toLocaleString()} F</div><div class="small-text">Total versé</div></div><div><div style="font-size:1.3rem; font-weight:800; color:#e67e22;">${(content.unpaidCount * FIXED_AMOUNT).toLocaleString()} F</div><div class="small-text">Dette</div></div></div>
+                    ${yearsNavHtml}<div id="detailMonthsContainer">${content.monthsHtml}</div><button id="closeModal" class="btn-outline">Fermer</button>`;
+        }
+        
+        let modal = document.createElement('div');
+        modal.className = 'modal';
+        let modalContent = document.createElement('div');
+        modalContent.className = 'modal-content';
+        modal.appendChild(modalContent);
+        document.body.appendChild(modal);
+        
+        function updateModal(year) {
+            let content = renderDetailContent(year);
+            modalContent.innerHTML = buildModal(year);
+            
+            document.querySelectorAll('.month-header').forEach(header => {
+                let monthContent = header.nextElementSibling;
+                header.addEventListener('click', () => {
+                    header.classList.toggle('collapsed');
+                    monthContent.classList.toggle('collapsed');
+                });
+            });
+            
+            document.getElementById('prevYearBtn')?.addEventListener('click', () => { let newYear = year - 1; if (availableYears.includes(newYear)) updateModal(newYear); });
+            document.getElementById('nextYearBtn')?.addEventListener('click', () => { let newYear = year + 1; if (availableYears.includes(newYear)) updateModal(newYear); });
+            document.querySelector('.close-modal')?.addEventListener('click', () => modal.remove());
+            document.getElementById('closeModal')?.addEventListener('click', () => modal.remove());
+        }
+        
+        updateModal(currentDetailYear);
+    }
+
+    function getAvailableYears() {
+        let years = new Set();
+        sessions.forEach(s => years.add(s.year));
+        return Array.from(years).sort((a,b) => a-b);
+    }
+
+    function renderYearFilter() {
+        let years = getAvailableYears();
+        let container = document.getElementById("yearFilterBar");
+        if (!container) return;
+        
+        let html = `<span class="year-filter ${currentYearFilter === 'all' ? 'active' : ''}" data-year="all">📅 Toutes (${sessions.length})</span>`;
+        years.forEach(y => {
+            let count = sessions.filter(s => s.year === y).length;
+            html += `<span class="year-filter ${currentYearFilter === y.toString() ? 'active' : ''}" data-year="${y}">📅 ${y} (${count})</span>`;
+        });
+        container.innerHTML = html;
+        
+        document.querySelectorAll('.year-filter').forEach(el => {
+            el.addEventListener('click', () => {
+                currentYearFilter = el.getAttribute('data-year');
+                renderYearFilter();
+                renderSessionsPage();
+            });
+        });
+    }
+
+    function renderSessionsPage() {
+        let select = document.getElementById("sessionSelect");
+        if (!select) return;
+        
+        let filtered = currentYearFilter === "all" ? sessions : sessions.filter(s => s.year === parseInt(currentYearFilter));
+        
+        if (filtered.length === 0) {
+            select.innerHTML = "<option>Aucune session</option>";
+            document.getElementById("sessionPaymentsTable").innerHTML = "";
+            return;
+        }
+        
+        let sorted = [...filtered].sort((a,b) => b.timestamp - a.timestamp);
+        select.innerHTML = `<option value="">-- Choisir une session --</option>` + sorted.map(s => `<option value="${s.id}">${s.dateLabel}</option>`).join('');
+        
+        select.onchange = () => {
+            let sessionId = select.value;
+            if (!sessionId) { document.getElementById("sessionPaymentsTable").innerHTML = ""; return; }
+            
+            let session = sessions.find(s => s.id === sessionId);
+            if (!session) return;
+            
+            let html = `<div class="mb-2" style="background:#eef2f5; padding:10px; border-radius:12px;">💰 Session du ${session.dateLabel} — ${FIXED_AMOUNT} FCFA par personne</div>`;
+            html += `<div class="payment-table"><div class="payment-header"><span>Membre</span><span>Téléphone</span><span>Statut</span></div>`;
+            
+            for (let member of members) {
+                let payment = payments.find(p => p.memberId === member.id && p.sessionId === sessionId);
+                let status = payment ? payment.status : "unpaid";
+                let isPaid = status === "paid";
+                
+                html += `<div class="payment-line"><span><strong>${escapeHtml(member.prenom)} ${escapeHtml(member.nom)}</strong></span><span>${member.telephone || "—"}</span><div class="pay-buttons"><span class="status-badge ${isPaid ? 'status-paid' : 'status-unpaid'}">${isPaid ? '🟢 PAYÉ' : '🔴 NON PAYÉ'}</span>`;
+                
+                if (isAdmin) {
+                    html += `<button class="btn-paid" data-member="${member.id}" data-session="${sessionId}">✔️ Payé</button><button class="btn-unpaid" data-member="${member.id}" data-session="${sessionId}">❌ Non payé</button>`;
+                }
+                
+                html += `</div></div>`;
+            }
+            
+            html += `</div>`;
+            document.getElementById("sessionPaymentsTable").innerHTML = html;
+            
+            if (isAdmin) {
+                document.querySelectorAll('.btn-paid').forEach(btn => btn.addEventListener('click', () => setPaymentStatus(btn.dataset.member, btn.dataset.session, "paid")));
+                document.querySelectorAll('.btn-unpaid').forEach(btn => btn.addEventListener('click', () => setPaymentStatus(btn.dataset.member, btn.dataset.session, "unpaid")));
+            }
+        };
+        
+        if (select.value === "" && sorted.length > 0) { select.value = sorted[0].id; select.onchange(); }
+    }
+
+    // NOUVELLE FONCTION : renderStatsPage améliorée avec recherche et tri
+    function renderStatsPage() {
+        const stats = getFilteredStats();
+        const ranking = getFilteredRanking();
+        
+        let periodLabel = "";
+        if (statsFilterType === "year" && statsSelectedYear) {
+            periodLabel = `<div class="filter-indicator" style="margin-bottom: 16px; justify-content: center;">📆 Période: Année ${statsSelectedYear}</div>`;
+        } else if (statsFilterType === "month" && statsSelectedYear !== null && statsSelectedMonth !== null) {
+            const monthsNames = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+            periodLabel = `<div class="filter-indicator" style="margin-bottom: 16px; justify-content: center;">📅 Période: ${monthsNames[statsSelectedMonth]} ${statsSelectedYear}</div>`;
+        }
+        
+        // Calcul des totaux pour l'affichage des stats
+        const totalCollected = ranking.reduce((sum, r) => sum + r.total, 0);
+        const totalDebt = ranking.reduce((sum, r) => sum + r.debt, 0);
+        const totalMembers = ranking.length;
+        const totalPossible = totalCollected + totalDebt;
+        
+        document.getElementById("statsSummary").innerHTML = `
+            ${periodLabel}
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value">${totalCollected.toLocaleString()} F</div>
+                    <div class="stat-label">💰 Total collecté</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" style="color: #e67e22;">${totalDebt.toLocaleString()} F</div>
+                    <div class="stat-label">💸 Dette totale</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${totalMembers}</div>
+                    <div class="stat-label">👥 Membres (filtrés)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${totalMembers > 0 ? Math.round(totalCollected / totalMembers / 1000) : 0}k</div>
+                    <div class="stat-label">📊 Moyenne/membre</div>
+                </div>
+            </div>
+        `;
+        
+        // Afficher les stats du classement (nombre de résultats)
+        const rankingStatsHtml = `
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+                <span>📊 ${ranking.length} membre(s) sur ${members.length}</span>
+                ${statsSearchTerm ? `<span class="badge-warning">🔍 "${statsSearchTerm}"</span>` : ''}
+            </div>
+        `;
+        document.getElementById("rankingStats").innerHTML = rankingStatsHtml;
+        
+        if (ranking.length === 0) {
+            document.getElementById("rankingList").innerHTML = `<div class="no-results">😕 Aucun membre trouvé pour "${statsSearchTerm || 'cette recherche'}"</div>`;
+            return;
+        }
+        
+        document.getElementById("rankingList").innerHTML = ranking.map((r, i) => `
+            <div class="member-row">
+                <div>
+                    <span style="font-weight:700;">${i+1}. ${escapeHtml(r.name)}</span>
+                    <div class="small-text">❌ ${r.unpaid} séance(s) impayée(s) | 💰 ${r.total.toLocaleString()} FCFA</div>
+                </div>
+                <div>
+                    <span><strong>${r.total.toLocaleString()} FCFA</strong></span>
+                    ${r.unpaid > 0 ? `<span class="badge-warning">-${r.debt.toLocaleString()} F</span>` : ''}
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
+
+    // Événements des filtres de statistiques
+    document.getElementById("statsAllBtn")?.addEventListener("click", () => {
+        resetStatsFilter();
+    });
+    
+    document.getElementById("statsYearBtn")?.addEventListener("click", () => {
+        statsFilterType = "year";
+        statsSelectedYear = null;
+        statsSelectedMonth = null;
+        updateStatsFilterUI();
+        renderStatsPage();
+    });
+    
+    document.getElementById("statsMonthBtn")?.addEventListener("click", () => {
+        statsFilterType = "month";
+        statsSelectedYear = null;
+        statsSelectedMonth = null;
+        updateStatsFilterUI();
+        renderStatsPage();
+    });
+    
+    document.getElementById("clearStatsFilter")?.addEventListener("click", () => {
+        resetStatsFilter();
+    });
+    
+    // NOUVEAUX ÉVÉNEMENTS : Recherche et tri dans les stats
+    document.getElementById("statsSearchInput")?.addEventListener("input", (e) => {
+        statsSearchTerm = e.target.value;
+        renderStatsPage();
+    });
+    
+    document.getElementById("sortByNameAsc")?.addEventListener("click", () => {
+        statsSortType = "name_asc";
+        updateSortButtonsUI();
+        renderStatsPage();
+    });
+    
+    document.getElementById("sortByNameDesc")?.addEventListener("click", () => {
+        statsSortType = "name_desc";
+        updateSortButtonsUI();
+        renderStatsPage();
+    });
+    
+    document.getElementById("sortByAmountAsc")?.addEventListener("click", () => {
+        statsSortType = "amount_asc";
+        updateSortButtonsUI();
+        renderStatsPage();
+    });
+    
+    document.getElementById("sortByAmountDesc")?.addEventListener("click", () => {
+        statsSortType = "amount_desc";
+        updateSortButtonsUI();
+        renderStatsPage();
+    });
+    
+    document.getElementById("sortByUnpaidAsc")?.addEventListener("click", () => {
+        statsSortType = "unpaid_asc";
+        updateSortButtonsUI();
+        renderStatsPage();
+    });
+    
+    document.getElementById("sortByUnpaidDesc")?.addEventListener("click", () => {
+        statsSortType = "unpaid_desc";
+        updateSortButtonsUI();
+        renderStatsPage();
+    });
+
+    document.getElementById("searchMemberInput")?.addEventListener("input", (e) => {
+        currentSearchTerm = e.target.value;
+        applyFiltersAndSort();
+        renderMembersPage();
+    });
+    
+    document.getElementById("sortAZBtn")?.addEventListener("click", () => {
+        currentSortOrder = "asc";
+        document.getElementById("sortAZBtn").classList.add("active");
+        document.getElementById("SortZABtn").classList.remove("active");
+        applyFiltersAndSort();
+        renderMembersPage();
+    });
+    
+    document.getElementById("SortZABtn")?.addEventListener("click", () => {
+        currentSortOrder = "desc";
+        document.getElementById("SortZABtn").classList.add("active");
+        document.getElementById("sortAZBtn").classList.remove("active");
+        applyFiltersAndSort();
+        renderMembersPage();
+    });
+    
+    document.getElementById("addMemberBtn")?.addEventListener("click", () => {
+        let nom = document.getElementById("memberNom").value;
+        let prenom = document.getElementById("memberPrenom").value;
+        let tel = document.getElementById("memberTel").value;
+        if (addMember(nom, prenom, tel)) {
+            document.getElementById("memberNom").value = "";
+            document.getElementById("memberPrenom").value = "";
+            document.getElementById("memberTel").value = "";
+        }
+    });
+    
+    document.getElementById("generateSessionsBtn")?.addEventListener("click", generateAllSessions);
+    document.getElementById("exportAllPdfBtn")?.addEventListener("click", exportToPDF);
+
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            let pageId = btn.getAttribute('data-page');
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active-page'));
+            document.getElementById(pageId).classList.add('active-page');
+            if (pageId === 'stats') {
+                populateMonthSelector();
+                populateStatsYearSelect();
+                populateStatsMonthSelect();
+                renderStatsPage();
+            }
+        });
+    });
+</script>
+</body>
+</html>
