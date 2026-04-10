@@ -112,6 +112,36 @@
             font-size: 0.85rem;
         }
 
+        /* Nouveau style pour le bouton visiteur */
+        .visitor-login-btn {
+            background: linear-gradient(135deg, #7c8ba0, #95a5a6);
+            margin-top: 12px;
+        }
+
+        .visitor-login-btn:hover {
+            background: linear-gradient(135deg, #6c7a8f, #8595a6);
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid #e2edf2;
+        }
+
+        .divider span {
+            padding: 0 10px;
+            color: #7c8ba0;
+            font-size: 0.85rem;
+        }
+
         .admin-badge {
             background: linear-gradient(135deg, #1f6e43, #2d8a55);
             color: white;
@@ -808,7 +838,6 @@
             cursor: pointer;
         }
 
-        /* Nouveaux styles pour la recherche et le tri dans stats */
         .stats-search-bar {
             display: flex;
             gap: 12px;
@@ -962,7 +991,6 @@
         <div class="card">
             <h2>📊 Statistiques <span style="background:linear-gradient(135deg,#1f6e43,#2d8a55);color:white;padding:4px 12px;border-radius:20px;font-size:0.75rem;">2024-2031</span></h2>
             
-            <!-- Barre de filtrage pour les statistiques -->
             <div class="stats-filter-bar">
                 <button id="statsAllBtn" class="stats-filter-btn active">📅 Toutes périodes</button>
                 <button id="statsYearBtn" class="stats-filter-btn">📆 Par année</button>
@@ -979,7 +1007,6 @@
                 </div>
             </div>
             
-            <!-- NOUVEAU : Barre de recherche et de tri pour le classement -->
             <div class="stats-search-bar">
                 <div class="stats-search-box">
                     <input type="text" id="statsSearchInput" placeholder="🔍 Rechercher un membre...">
@@ -999,7 +1026,6 @@
         
         <div class="card">
             <div class="ranking-container">
-                <!-- Classement par contribution -->
                 <div class="ranking-box">
                     <div class="ranking-title">
                         🏆 Classement par contribution
@@ -1009,7 +1035,6 @@
                     <div id="rankingList"></div>
                 </div>
                 
-                <!-- Classement par remboursement / dette par mois -->
                 <div class="ranking-box">
                     <div class="ranking-title">
                         📅 Dette par mois
@@ -1036,6 +1061,13 @@
         <input type="email" id="loginEmail" placeholder="Email administrateur">
         <input type="password" id="loginPassword" placeholder="Mot de passe">
         <button id="loginBtn">Se connecter</button>
+        
+        <div class="divider">
+            <span>ou</span>
+        </div>
+        
+        <button id="visitorLoginBtn" class="visitor-login-btn">👁️ Continuer en tant que visiteur</button>
+        
         <div id="loginError" class="error"></div>
         <div class="small-text mt-2">👁️ Les visiteurs peuvent consulter les données</div>
         <div class="small-text mt-2">🔐 Seuls les administrateurs peuvent modifier</div>
@@ -1078,14 +1110,12 @@
     let currentPage = 1;
     let filteredMembers = [];
     
-    // Variables pour le filtrage des statistiques
-    let statsFilterType = "all"; // 'all', 'year', 'month'
+    let statsFilterType = "all";
     let statsSelectedYear = null;
     let statsSelectedMonth = null;
     
-    // NOUVELLES VARIABLES POUR LA RECHERCHE ET LE TRI DANS STATS
     let statsSearchTerm = "";
-    let statsSortType = "amount_desc"; // name_asc, name_desc, amount_asc, amount_desc, unpaid_asc, unpaid_desc
+    let statsSortType = "amount_desc";
     let filteredRanking = [];
 
     const ADMIN_UIDS = [
@@ -1219,6 +1249,13 @@
         });
     }
 
+    // Fonction pour la connexion en tant que visiteur
+    function loginAsVisitor() {
+        document.getElementById("loginModal").style.display = "none";
+        // On reste en mode non authentifié
+        // Les données seront chargées via le listener
+    }
+
     onAuthStateChanged(auth, (user) => {
         currentUser = user;
         isAdmin = checkIsAdmin(user);
@@ -1234,7 +1271,7 @@
             if (user && !isAdmin) signOut(auth);
             document.getElementById("logoutBtn").classList.add("hidden");
             document.getElementById("showLoginBtnHeader").classList.remove("hidden");
-            document.getElementById("userInfo").innerHTML = `<span class="visitor-badge">👁️ Mode visiteurs</span>`;
+            document.getElementById("userInfo").innerHTML = `<span class="visitor-badge">👁️ Mode visiteur</span>`;
             toggleAdminElements(false);
             setupRealtimeListener();
         }
@@ -1243,6 +1280,9 @@
     document.getElementById("showLoginBtnHeader").addEventListener("click", () => {
         document.getElementById("loginModal").style.display = "flex";
     });
+
+    // Nouveau gestionnaire pour le bouton visiteur
+    document.getElementById("visitorLoginBtn").addEventListener("click", loginAsVisitor);
 
     document.getElementById("loginBtn").addEventListener("click", async () => {
         const email = document.getElementById("loginEmail").value;
@@ -1280,7 +1320,7 @@
 
     document.getElementById("logoutBtn").addEventListener("click", async () => {
         await signOut(auth);
-        alert("Déconnecté. Mode visiteurs activé.");
+        alert("Déconnecté. Mode visiteur activé.");
     });
 
     async function saveToFirebase() {
@@ -1495,7 +1535,6 @@
         return { totalCollected, totalPossible, totalDebt, paymentCount: filteredPayments.length };
     }
 
-    // NOUVELLE FONCTION : Obtenir le classement filtré par période ET par recherche
     function getFilteredRanking() {
         let filteredPayments = [...payments];
         
@@ -1526,13 +1565,11 @@
             };
         });
         
-        // Appliquer la recherche
         if (statsSearchTerm) {
             const term = statsSearchTerm.toLowerCase();
             ranking = ranking.filter(r => r.fullName.includes(term) || (r.phone && r.phone.includes(term)));
         }
         
-        // Appliquer le tri
         ranking.sort((a, b) => {
             switch(statsSortType) {
                 case "name_asc":
@@ -1767,7 +1804,6 @@
         renderStatsPage();
     }
     
-    // NOUVELLE FONCTION : Mettre à jour l'UI des boutons de tri
     function updateSortButtonsUI() {
         document.querySelectorAll('.sort-btn').forEach(btn => {
             btn.classList.remove('active');
@@ -2067,7 +2103,6 @@
         if (select.value === "" && sorted.length > 0) { select.value = sorted[0].id; select.onchange(); }
     }
 
-    // NOUVELLE FONCTION : renderStatsPage améliorée avec recherche et tri
     function renderStatsPage() {
         const stats = getFilteredStats();
         const ranking = getFilteredRanking();
@@ -2080,11 +2115,9 @@
             periodLabel = `<div class="filter-indicator" style="margin-bottom: 16px; justify-content: center;">📅 Période: ${monthsNames[statsSelectedMonth]} ${statsSelectedYear}</div>`;
         }
         
-        // Calcul des totaux pour l'affichage des stats
         const totalCollected = ranking.reduce((sum, r) => sum + r.total, 0);
         const totalDebt = ranking.reduce((sum, r) => sum + r.debt, 0);
         const totalMembers = ranking.length;
-        const totalPossible = totalCollected + totalDebt;
         
         document.getElementById("statsSummary").innerHTML = `
             ${periodLabel}
@@ -2108,7 +2141,6 @@
             </div>
         `;
         
-        // Afficher les stats du classement (nombre de résultats)
         const rankingStatsHtml = `
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
                 <span>📊 ${ranking.length} membre(s) sur ${members.length}</span>
@@ -2146,7 +2178,6 @@
         });
     }
 
-    // Événements des filtres de statistiques
     document.getElementById("statsAllBtn")?.addEventListener("click", () => {
         resetStatsFilter();
     });
@@ -2171,7 +2202,6 @@
         resetStatsFilter();
     });
     
-    // NOUVEAUX ÉVÉNEMENTS : Recherche et tri dans les stats
     document.getElementById("statsSearchInput")?.addEventListener("input", (e) => {
         statsSearchTerm = e.target.value;
         renderStatsPage();
